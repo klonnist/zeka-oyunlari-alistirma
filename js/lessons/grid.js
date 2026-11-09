@@ -1,6 +1,6 @@
 // Izgara oyunlarının animasyonlu dersleri
-import { kit, singles, explainSingle, rowBand, colBand, listTr, C1, C2, C3 } from './kit.js';
-import { edgeKey, parseEdge, N4, N8 } from '../core/util.js';
+import { kit, singles, explainSingle, rowBand, colBand, listTr, C1, C2, C3 } from './kit.js?v=4';
+import { edgeKey, parseEdge, N4, N8 } from '../core/util.js?v=4';
 
 // ---------- ortak: yarışma sorusu adımı ----------
 function qaStep(k, extra = '') {

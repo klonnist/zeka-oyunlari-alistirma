@@ -1,6 +1,6 @@
-import { choiceGame } from './base.js';
-import { markerSvg, figGrid, PALETTE } from './visual.js';
-import { textOptions } from '../core/util.js';
+import { choiceGame } from './base.js?v=4';
+import { markerSvg, figGrid, PALETTE } from './visual.js?v=4';
+import { textOptions } from '../core/util.js?v=4';
 
 const SHAPES = ['circle', 'tri', 'square', 'star', 'heart', 'dot'];
 

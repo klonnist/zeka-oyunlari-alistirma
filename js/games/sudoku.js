@@ -1,6 +1,6 @@
-import { valueGame } from './base.js';
-import { boxRegions, latinConstraints, randomFill, reduceGivens, to2 } from './latin.js';
-import { numberOptions, diagonalArrow, range } from '../core/util.js';
+import { valueGame } from './base.js?v=4';
+import { boxRegions, latinConstraints, randomFill, reduceGivens, to2 } from './latin.js?v=4';
+import { numberOptions, diagonalArrow, range } from '../core/util.js?v=4';
 
 export function diagSumQuestion(rng, n, sol2, extraText = '') {
   const { arrow, cells } = diagonalArrow(rng, n);

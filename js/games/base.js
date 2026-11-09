@@ -1,5 +1,5 @@
 // Oyun türleri için ortak kalıplar
-import { grid, clone2 } from '../core/util.js';
+import { grid, clone2 } from '../core/util.js?v=4';
 
 const HL = '#fff1d0'; // soru hücresi vurgusu
 

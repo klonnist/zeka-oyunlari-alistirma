@@ -1,8 +1,8 @@
-import { valueGame } from './base.js';
-import { lineVars, latinConstraints, randomFill, to2 } from './latin.js';
-import { isUnique, reduceClues } from '../core/csp.js';
-import { range } from '../core/util.js';
-import { diagSumQuestion } from './sudoku.js';
+import { valueGame } from './base.js?v=4';
+import { lineVars, latinConstraints, randomFill, to2 } from './latin.js?v=4';
+import { isUnique, reduceClues } from '../core/csp.js?v=4';
+import { range } from '../core/util.js?v=4';
+import { diagSumQuestion } from './sudoku.js?v=4';
 
 const visible = (xs) => { let m = 0, k = 0; for (const x of xs) if (x > m) { m = x; k++; } return k; };
 

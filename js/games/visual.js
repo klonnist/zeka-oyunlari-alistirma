@@ -1,5 +1,5 @@
 // Görsel sorular için çokgen (poliomino) ve SVG yardımcıları
-import { N4 } from '../core/util.js';
+import { N4 } from '../core/util.js?v=4';
 
 export const PALETTE = ['#e4572e', '#3a86ff', '#ffbe0b', '#2a9d8f', '#9b5de5', '#f15bb5', '#43aa8b', '#fb8500'];
 

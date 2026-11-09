@@ -1,6 +1,6 @@
 // Animasyonlu ders oynatıcısı
-import { renderBoard, esc } from './core/board.js';
-import { LETTERS } from './core/util.js';
+import { renderBoard, esc } from './core/board.js?v=4';
+import { LETTERS } from './core/util.js?v=4';
 
 const speech = typeof window !== 'undefined' && 'speechSynthesis' in window;
 let voice = null;

@@ -1,6 +1,6 @@
 // Latin kare ailesi için ortak araçlar
-import { solve, isUnique, C, reduceClues } from '../core/csp.js';
-import { range } from '../core/util.js';
+import { solve, isUnique, C, reduceClues } from '../core/csp.js?v=4';
+import { range } from '../core/util.js?v=4';
 
 export function boxRegions(n) {
   const [bh, bw] = n === 4 ? [2, 2] : n === 6 ? [2, 3] : n === 9 ? [3, 3] : [1, n];

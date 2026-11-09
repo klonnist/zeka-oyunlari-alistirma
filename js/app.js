@@ -1,9 +1,9 @@
-import { GAMES, byId } from './games/index.js';
-import { makeRng, newSeed } from './core/rng.js';
-import { renderBoard, attachInput, esc } from './core/board.js';
-import { LETTERS, clone2 } from './core/util.js';
-import { mountLesson } from './tutorial.js';
-import { buildLesson } from './lessons/index.js';
+import { GAMES, byId } from './games/index.js?v=4';
+import { makeRng, newSeed } from './core/rng.js?v=4';
+import { renderBoard, attachInput, esc } from './core/board.js?v=4';
+import { LETTERS, clone2 } from './core/util.js?v=4';
+import { mountLesson } from './tutorial.js?v=4';
+import { buildLesson } from './lessons/index.js?v=4';
 
 const $app = document.getElementById('app');
 

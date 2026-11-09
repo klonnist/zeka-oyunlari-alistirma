@@ -1,6 +1,6 @@
-import { edgeGame } from './base.js';
-import { isUnique } from '../core/csp.js';
-import { range, N4, edgeKey, parseEdge, textOptions } from '../core/util.js';
+import { edgeGame } from './base.js?v=4';
+import { isUnique } from '../core/csp.js?v=4';
+import { range, N4, edgeKey, parseEdge, textOptions } from '../core/util.js?v=4';
 
 const NAMES = ['A', 'B', 'C', 'D'];
 const COLORS = ['#e4572e', '#3a86ff', '#2a9d8f', '#9b5de5'];

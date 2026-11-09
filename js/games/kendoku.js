@@ -1,7 +1,7 @@
-import { valueGame } from './base.js';
-import { latinConstraints, randomFill, reduceGivens, to2 } from './latin.js';
-import { range, N4 } from '../core/util.js';
-import { diagSumQuestion } from './sudoku.js';
+import { valueGame } from './base.js?v=4';
+import { latinConstraints, randomFill, reduceGivens, to2 } from './latin.js?v=4';
+import { range, N4 } from '../core/util.js?v=4';
+import { diagSumQuestion } from './sudoku.js?v=4';
 
 function makeCages(rng, n, level) {
   const id = range(n).map(() => Array(n).fill(-1));

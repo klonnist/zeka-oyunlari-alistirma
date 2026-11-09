@@ -1,6 +1,6 @@
-import { edgeGame } from './base.js';
-import { isUnique, reduceClues } from '../core/csp.js';
-import { range, numberOptions, N4, edgeKey } from '../core/util.js';
+import { edgeGame } from './base.js?v=4';
+import { isUnique, reduceClues } from '../core/csp.js?v=4';
+import { range, numberOptions, N4, edgeKey } from '../core/util.js?v=4';
 
 function makeRegion(rng, n) {
   const target = Math.round(n * n * rng.int(40, 62) / 100);
