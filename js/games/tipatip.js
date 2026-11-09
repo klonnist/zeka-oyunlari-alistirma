@@ -4,7 +4,7 @@ import { textOptions } from '../core/util.js';
 
 const SHAPES = ['circle', 'tri', 'square', 'star', 'heart', 'dot'];
 
-function cardSvg(card, n) {
+export function cardSvg(card, n, rings = []) {
   const s = 26, W = n * s + 8;
   const out = [`<svg viewBox="0 0 ${W} ${W}" class="fig"><rect x="2" y="2" width="${W - 4}" height="${W - 4}" rx="8" fill="#fff" stroke="#2b2d42" stroke-width="2"/>`];
   card.forEach((cell, i) => {
@@ -13,10 +13,11 @@ function cardSvg(card, n) {
     if (cell.bg) out.push(`<rect x="${x + 1}" y="${y + 1}" width="${s - 2}" height="${s - 2}" rx="4" fill="${cell.bg}"/>`);
     if (cell.m) out.push(markerSvg(cell.m, x + s / 2, y + s / 2, s * 0.28));
   });
+  for (const i of rings) out.push(`<rect class="pulse" x="${4 + (i % n) * s + 1}" y="${4 + Math.floor(i / n) * s + 1}" width="${s - 2}" height="${s - 2}" rx="5" fill="none" stroke="#e4572e" stroke-width="3"/>`);
   out.push('</svg>');
   return out.join('');
 }
-const keyCard = (card) => card.map((c) => (c.bg || '-') + '/' + (c.m || '-')).join('|');
+export const keyCard = (card) => card.map((c) => (c.bg || '-') + '/' + (c.m || '-')).join('|');
 
 export default choiceGame({
   id: 'tipatip',

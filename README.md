@@ -7,11 +7,11 @@ Her soru tarayıcıda o an üretilir (sabit soru bankası yok); her bulmacanın 
 Farklı Şekil, ABC Bağlamaca, Amiral Battı, Farklı Komşular, Kendoku, Çit, ABC Kadar Kolay, Hazine Avı
 ve finalde eklenen Apartmanlar, Sayı Bulmaca, Tapa, Kakuro.
 
-**Modlar:** tek tek alıştırma (Kolay/Orta, kontrol, ipucu, çözüm) ve süreli yarışma provası
-(Okul içi: 15 soru / 60 dk, Final: 22+3 soru / 90 dk).
+**Modlar:** animasyonlu "Nasıl oynanır?" dersleri (adım adım, isteğe bağlı sesli anlatım), tek tek alıştırma (Kolay/Orta, kontrol, ipucu, çözüm) ve süreli yarışma provası
+(Okul içi: 15 soru / 60 dk, Final: 22+3 soru / 90 dk). Oyun, ders ve prova ekranları tam ekran yapılabilir.
 
 Bağımsız bir alıştırma sitesidir; resmi yarışma sitesi değildir.
 
 ## Geliştirme
 Derleme gerekmez, statik dosyalardır. Yerel sunucu: `node tools/serve.mjs` → http://localhost:4197
-Testler: `node --test tests/generators.test.mjs`
+Testler: `node --test tests/generators.test.mjs tests/lessons.test.mjs`

@@ -59,6 +59,8 @@ export function renderBoard(cfg) {
       if (k.kakuro.r != null) out.push(`<text x="${X(c) + S - 4}" y="${Y(r) + 15}" class="kk" text-anchor="end">${k.kakuro.r}</text>`);
       if (k.kakuro.d != null) out.push(`<text x="${X(c) + 4}" y="${Y(r) + S - 5}" class="kk">${k.kakuro.d}</text>`);
     }
+    const popped = cfg.pop && cfg.pop.has(r + ',' + c);
+    if (popped) out.push('<g class="pop">');
     if (k.sym) out.push(symbol(k.sym, cx, cy));
     if (k.label) out.push(`<text x="${X(c) + 3}" y="${Y(r) + 12}" class="lbl">${esc(k.label)}</text>`);
     if (k.mark) out.push(`<text x="${X(c) + S - 3}" y="${Y(r) + 12}" class="mark" text-anchor="end">${esc(k.mark)}</text>`);
@@ -68,6 +70,8 @@ export function renderBoard(cfg) {
       const fs = L > 2 || (L > 1 && cls !== 'clue') ? ' style="font-size:15px"' : '';
       out.push(`<text x="${cx}" y="${cy + 1}" class="t ${cls}" text-anchor="middle" dominant-baseline="central"${fs}>${esc(k.text)}</text>`);
     }
+    if (popped) out.push('</g>');
+    if (k.note) out.push(`<text x="${cx}" y="${Y(r) + S - 4}" class="note" text-anchor="middle">${esc(k.note)}</text>`);
   }
 
   // Ardışık noktalar
@@ -105,13 +109,22 @@ export function renderBoard(cfg) {
   if (L) {
     const off = L.type === 'center' ? S / 2 : 0;
     const P = (r, c) => [X(c) + off, Y(r) + off];
+    const fresh = L.fresh ? [...L.fresh] : [];
     const draw = (set, color, w) => {
       for (const k of set) {
         const [r1, c1, r2, c2] = parseKey(k);
         const [x1, y1] = P(r1, c1), [x2, y2] = P(r2, c2);
-        out.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>`);
+        const i = fresh.indexOf(k);
+        const anim = i >= 0 ? ` class="draw" pathLength="1" style="animation-delay:${(i * 0.12).toFixed(2)}s"` : '';
+        out.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${w}" stroke-linecap="round"${anim}/>`);
       }
     };
+    for (const k of L.crosses || []) {
+      const [r1, c1, r2, c2] = parseKey(k);
+      const [x1, y1] = P(r1, c1), [x2, y2] = P(r2, c2);
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      out.push(`<path class="pop" d="M${mx - 4} ${my - 4}l8 8M${mx + 4} ${my - 4}l-8 8" stroke="#9aa3b5" stroke-width="2.2"/>`);
+    }
     if (L.paths) {
       for (const { set, color } of L.paths) draw(set, color, 12);
     } else draw(L.edges || [], L.color || '#e4572e', L.type === 'center' ? 10 : 5);
@@ -131,6 +144,18 @@ export function renderBoard(cfg) {
         }
       }
     }
+  }
+  // Ders katmanları: tarama şeritleri, odak halkaları, el işareti
+  for (const b of cfg.scan || []) {
+    out.push(`<rect class="scan" x="${X(b.c) + 2}" y="${Y(b.r) + 2}" width="${b.w * S - 4}" height="${b.h * S - 4}" rx="8" fill="${b.color || '#5b4bdb'}" fill-opacity=".14" stroke="${b.color || '#5b4bdb'}" stroke-width="2.5"/>`);
+  }
+  for (const [r, c, color] of cfg.focus || []) {
+    out.push(`<rect class="pulse" x="${X(c) + 3}" y="${Y(r) + 3}" width="${S - 6}" height="${S - 6}" rx="7" fill="none" stroke="${color || '#ff9f1c'}" stroke-width="4"/>`);
+  }
+  if (cfg.pointer) {
+    const [r, c] = cfg.pointer;
+    const px = X(c) + S * 0.62, py = Y(r) + S * 0.72;
+    out.push(`<g class="hand" style="--hx:${px}px;--hy:${py}px"><circle class="ripple" cx="${X(c) + S / 2}" cy="${Y(r) + S / 2}" r="6" fill="none" stroke="#ff9f1c" stroke-width="3"/><text x="${px}" y="${py}" font-size="24" dominant-baseline="hanging">👆</text></g>`);
   }
   out.push('</svg>');
   return out.join('');

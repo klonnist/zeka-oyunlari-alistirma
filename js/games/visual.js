@@ -51,10 +51,11 @@ export function isConnected(cells) {
 }
 
 // Poliomino çiz. cells: [[r,c,color?,marker?]]
-export function polySvg(cells, { cell = 22, box = 5, fill = null, stroke = '#2b2d42', label = null, shadow = false } = {}) {
+export function polySvg(cells, { cell = 22, box = 5, fill = null, stroke = '#2b2d42', label = null, shadow = false, red = [], ghost = [], norm = true } = {}) {
   const W = box * cell + 10;
-  const n = normalize(cells);
-  const h = Math.max(...n.map((x) => x[0])) + 1, w = Math.max(...n.map((x) => x[1])) + 1;
+  const n = norm ? normalize(cells) : cells;
+  const all = [...n, ...ghost];
+  const h = Math.max(...all.map((x) => x[0])) + 1, w = Math.max(...all.map((x) => x[1])) + 1;
   const ox = (W - w * cell) / 2, oy = (W - h * cell) / 2;
   const parts = [`<svg viewBox="0 0 ${W} ${W}" class="fig">`];
   for (const [r, c, color, marker] of n) {
@@ -63,6 +64,9 @@ export function polySvg(cells, { cell = 22, box = 5, fill = null, stroke = '#2b2
     parts.push(`<rect x="${x}" y="${y}" width="${cell}" height="${cell}" fill="${f}" stroke="${shadow ? '#2b2d42' : stroke}" stroke-width="1.5"/>`);
     if (marker && !shadow) parts.push(markerSvg(marker, x + cell / 2, y + cell / 2, cell * 0.32));
   }
+  const isIn = (arr, r, c) => arr.some((x) => x[0] === r && x[1] === c);
+  for (const [r, c] of n) if (isIn(red, r, c)) parts.push(`<rect class="pulse" x="${ox + c * cell + 2}" y="${oy + r * cell + 2}" width="${cell - 4}" height="${cell - 4}" fill="#e4572e" fill-opacity=".85" stroke="#e4572e" stroke-width="2"/>`);
+  for (const [r, c] of ghost) parts.push(`<rect class="pulse" x="${ox + c * cell + 1}" y="${oy + r * cell + 1}" width="${cell - 2}" height="${cell - 2}" fill="none" stroke="#e4572e" stroke-width="2.5" stroke-dasharray="4 3"/>`);
   parts.push('</svg>');
   return parts.join('');
 }
@@ -87,5 +91,5 @@ export function markerSvg(m, cx, cy, s) {
 }
 
 export function figGrid(items, cls = '') {
-  return `<div class="figs ${cls}">${items.map(({ label, svg }) => `<div class="figbox"><div class="figlbl">${label}</div>${svg}</div>`).join('')}</div>`;
+  return `<div class="figs ${cls}">${items.map(({ label, svg, cls: bc = "" }) => `<div class="figbox ${bc}"><div class="figlbl">${label}</div>${svg}</div>`).join("")}</div>`;
 }

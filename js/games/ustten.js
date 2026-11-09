@@ -9,7 +9,7 @@ function shade(hex, f) {
 }
 
 // h[j][i]: j = derinlik (0 = ön), i = soldan sağa
-function cubesSvg(h, color) {
+export function cubesSvg(h, color) {
   const D = h.length, W = h[0].length, s = 30, dx = s * 0.5, dy = -s * 0.5;
   const maxH = Math.max(...h.flat());
   const width = W * s + D * dx + 10, height = maxH * s + D * -dy + s * 0.2 + 10;
@@ -33,13 +33,14 @@ function cubesSvg(h, color) {
 }
 
 // üstten görünüm: arka sıra yukarıda
-function topSvg(top) {
+export function topSvg(top, rings = []) {
   const R = top.length, C = top[0].length, s = 22;
   const out = [`<svg viewBox="0 0 ${C * s + 8} ${R * s + 8}" class="fig">`];
   for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
     const v = top[r][c];
     out.push(`<rect x="${4 + c * s}" y="${4 + r * s}" width="${s}" height="${s}" fill="${v || '#fff'}" stroke="${v ? '#2b2d42' : '#d5dae3'}" stroke-width="1.5"/>`);
   }
+  for (const [r, c] of rings) out.push(`<rect class="pulse" x="${5 + c * s}" y="${5 + r * s}" width="${s - 2}" height="${s - 2}" fill="none" stroke="#e4572e" stroke-width="3"/>`);
   out.push('</svg>');
   return out.join('');
 }

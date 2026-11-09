@@ -2,6 +2,8 @@ import { GAMES, byId } from './games/index.js';
 import { makeRng, newSeed } from './core/rng.js';
 import { renderBoard, attachInput, esc } from './core/board.js';
 import { LETTERS, clone2 } from './core/util.js';
+import { mountLesson } from './tutorial.js';
+import { buildLesson } from './lessons/index.js';
 
 const $app = document.getElementById('app');
 
@@ -30,6 +32,52 @@ function puzzle(id, level, seed) {
   return cache.get(k);
 }
 
+// ---------- tam ekran ----------
+const fsApi = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+function setFsClass(on) {
+  document.body.classList.toggle('fs', on);
+  document.querySelectorAll('.fsbtn').forEach((b) => { b.textContent = on ? '✕ Tam ekrandan çık' : '⛶ Tam ekran'; b.setAttribute('aria-pressed', on); });
+}
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+let fsSince = 0, fsUserExit = false;
+async function toggleFs() {
+  const on = document.body.classList.contains('fs');
+  if (fsEl()) { // gerçek tam ekrandan çık
+    fsUserExit = true;
+    try { await (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch { /* yok say */ }
+    return; // sınıf, fullscreenchange olayıyla güncellenir
+  }
+  if (!on && fsApi) {
+    fsSince = Date.now(); fsUserExit = false;
+    try {
+      const req = (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen).call(document.documentElement);
+      await Promise.race([req, wait(500)]);
+    } catch { /* izin verilmedi */ }
+    await wait(60);
+    if (fsEl()) { fsSince = Date.now(); fsUserExit = false; return; }
+  }
+  // Tam ekran API'si yoksa ya da izin verilmediyse (ör. iPhone): ekranı kaplayan sayfa içi mod
+  document.body.classList.toggle('pseudo', !on);
+  setFsClass(!on);
+}
+['fullscreenchange', 'webkitfullscreenchange'].forEach((ev) => document.addEventListener(ev, () => {
+  const on = !!fsEl();
+  // tarayıcı tam ekranı hemen geri aldıysa (kullanıcı çıkmadan) sayfa içi moda geç
+  if (!on && !fsUserExit && Date.now() - fsSince < 1500) { document.body.classList.add('pseudo'); setFsClass(true); return; }
+  document.body.classList.remove('pseudo');
+  setFsClass(on);
+}));
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && document.body.classList.contains('pseudo')) toggleFs(); });
+const fsExit = document.createElement('button');
+fsExit.className = 'fs-exit';
+fsExit.textContent = '✕ Çık';
+fsExit.setAttribute('aria-label', 'Tam ekrandan çık');
+fsExit.addEventListener('click', toggleFs);
+document.body.appendChild(fsExit);
+document.addEventListener('click', (ev) => { if (ev.target.closest('.fsbtn')) toggleFs(); });
+const fsBtn = () => `<button class="fsbtn btn small ghost" aria-pressed="${document.body.classList.contains('fs')}">${document.body.classList.contains('fs') ? '✕ Tam ekrandan çık' : '⛶ Tam ekran'}</button>`;
+
 // ---------- yönlendirme ----------
 window.addEventListener('hashchange', route);
 setTimeout(route, 0); // tüm sabitler tanımlandıktan sonra
@@ -42,6 +90,7 @@ function route() {
     if (!parts[3]) { location.replace(`#/oyun/${parts[1]}/${level}/${newSeed()}`); return; }
     return playScreen(parts[1], level, parts[3]);
   }
+  if (parts[0] === 'ders' && byId[parts[1]]) return lessonScreen(parts[1]);
   if (parts[0] === 'prova' && (parts[1] === 'okul' || parts[1] === 'final')) return examScreen(parts[1], parts[2]);
   return homeScreen();
 }
@@ -68,6 +117,11 @@ function homeScreen() {
       <p class="sub">3. ve 4. sınıflar için · her soru yepyeni, sorular hiç bitmez!</p>
       <div class="dates">${DATES.map(([t, d]) => { const k = daysTo(d); return `<div class="date"><b>${k > 0 ? k + ' gün' : 'Geçti'}</b><span>${t}</span><small>${d.split('-').reverse().join('.')}</small></div>`; }).join('')}</div>
     </header>
+    <section>
+      <h2>📚 Önce Öğren</h2>
+      <p class="muted">Her oyunun kurallarını küçük bir örnek üzerinde, adım adım animasyonla izle. İstersen sesli anlatımı aç.</p>
+      <div class="lgrid">${GAMES.map((g) => `<a class="lcard ${watched()[g.id] ? 'seen' : ''}" href="#/ders/${g.id}"><span>${g.icon}</span><b>${g.name}</b>${watched()[g.id] ? '<i>✓</i>' : ''}</a>`).join('')}</div>
+    </section>
     <section>
       <h2>🏁 Yarışma Provası</h2>
       <div class="exams">
@@ -242,10 +296,10 @@ function playScreen(id, level, seed) {
   }
   const lv = (l) => `<a class="lv ${l === level ? 'on' : ''}" href="#/oyun/${id}/${l}/${newSeed()}">${l === 'kolay' ? 'Kolay' : 'Orta'} <small>${g.levels[l]}</small></a>`;
   $app.innerHTML = `
-    <div class="bar"><a class="back" href="#/">← Ana sayfa</a><span class="code" title="Bu kodu not alırsan aynı soruyu tekrar açabilirsin">Soru kodu: <b>${esc(seed)}</b></span></div>
+    <div class="bar"><a class="back" href="#/">← Ana sayfa</a><span class="code" title="Bu kodu not alırsan aynı soruyu tekrar açabilirsin">Soru kodu: <b>${esc(seed)}</b></span>${fsBtn()}</div>
     <h1 class="gtitle">${g.icon} ${g.name}</h1>
     <div class="levels">${lv('kolay')}${lv('orta')}</div>
-    <details class="rules" ${progress().solved[id] ? '' : 'open'}><summary>Nasıl oynanır?</summary><p>${esc(g.rules)}</p></details>
+    <details class="rules" ${progress().solved[id] ? '' : 'open'}><summary>Nasıl oynanır?</summary><p>${esc(g.rules)}</p><a class="btn learn ${watched()[id] ? 'ghost' : 'glow'}" href="#/ders/${id}">▶ Animasyonla öğren</a></details>
     <div class="puz"></div>
     <div class="next"><a class="btn big" href="#/oyun/${id}/${level}/${newSeed()}">Yeni soru ➜</a></div>`;
   let counted = false;
@@ -320,10 +374,10 @@ function examScreen(kind, sub) {
   const g = byId[it.id];
   const main = ex.items.filter((x) => !x.spare).length;
   $app.innerHTML = `
-    <div class="bar exam-bar"><span class="timer">⏱ <b id="tm"></b></span><span>${it.spare ? 'Yedek soru ' + (qi - main + 1) : 'Soru ' + (qi + 1) + ' / ' + main}</span><button class="btn small" id="finish">Bitir</button></div>
+    <div class="bar exam-bar"><span class="timer">⏱ <b id="tm"></b></span><span>${it.spare ? 'Yedek soru ' + (qi - main + 1) : 'Soru ' + (qi + 1) + ' / ' + main}</span><span class="barbtns">${fsBtn()}<button class="btn small" id="finish">Bitir</button></span></div>
     <div class="nav">${ex.items.map((x, i) => `<a href="#/prova/${kind}/${i + 1}" class="nq ${i === qi ? 'cur' : ''} ${ex.answers[i] != null ? 'done' : ''} ${x.spare ? 'spare' : ''}">${x.spare ? 'Y' + (i - main + 1) : i + 1}</a>`).join('')}</div>
     <h2 class="qtype">${g.icon} ${g.name}</h2>
-    <details class="rules"><summary>Kural</summary><p>${esc(g.rules)}</p></details>
+    <details class="rules"><summary>Kural</summary><p>${esc(g.rules)}</p><a class="learnlink" href="#/ders/${it.id}">▶ Animasyonlu dersi izle (süre işlemeye devam eder)</a></details>
     <div class="puz"><p class="loading">Soru hazırlanıyor…</p></div>
     <div class="qnav">
       ${qi > 0 ? `<a class="btn ghost" href="#/prova/${kind}/${qi}">← Önceki</a>` : '<span></span>'}
@@ -409,4 +463,25 @@ function examResults(kind, ex) {
     ui.showSolution();
     el.querySelectorAll('.actions,.palette,.tip').forEach((x) => x.remove());
   }));
+}
+
+// ---------- animasyonlu ders ----------
+function watched() { return store.get('zo-lessons', {}); }
+function lessonScreen(id) {
+  const g = byId[id];
+  const idx = GAMES.indexOf(g);
+  const next = GAMES[(idx + 1) % GAMES.length];
+  $app.innerHTML = `
+    <div class="bar"><a class="back" href="#/">← Ana sayfa</a><a class="back" href="#/oyun/${id}/kolay">Oyuna git →</a>${fsBtn()}</div>
+    <h1 class="gtitle">${g.icon} ${g.name} <small class="tag">Nasıl oynanır?</small></h1>
+    <div class="lroot"><p class="loading">Ders hazırlanıyor…</p></div>
+    <div class="lnav"><a class="btn ghost" href="#/ders/${next.id}">Sonraki ders: ${next.icon} ${next.name} →</a></div>`;
+  setTimeout(() => {
+    const { p, steps } = buildLesson(g);
+    const ui = mountLesson($app.querySelector('.lroot'), g, p, steps, {
+      tryHref: `#/oyun/${id}/kolay/${newSeed()}`,
+      onFinish() { const w = watched(); if (!w[id]) { w[id] = true; store.set('zo-lessons', w); } },
+    });
+    setTimeout(() => ui.play(), 600);
+  }, 20);
 }
