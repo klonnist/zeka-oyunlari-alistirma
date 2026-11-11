@@ -1,8 +1,8 @@
 // Görsel türlerin animasyonlu dersleri (Gölge, Farklı Şekil, Tıpatıp, Üstten Görünüş)
-import { kit } from './kit.js?v=4';
-import { polySvg, figGrid, normalize, keyOf, transform } from '../games/visual.js?v=4';
-import { cardSvg, keyCard } from '../games/tipatip.js?v=4';
-import { cubesSvg, topSvg } from '../games/ustten.js?v=4';
+import { kit } from './kit.js?v=5';
+import { polySvg, figGrid, normalize, keyOf, transform } from '../games/visual.js?v=5';
+import { cardSvg, keyCard } from '../games/tipatip.js?v=5';
+import { cubesSvg, topSvg } from '../games/ustten.js?v=5';
 
 const ok = (s) => s + ' good';
 const qaSay = (p) => `Doğru şık ${'ABCD'[p.q.options.indexOf(p.q.answer)]}) ${p.q.answer}.`;

@@ -1,9 +1,12 @@
-import { GAMES, byId } from './games/index.js?v=4';
-import { makeRng, newSeed } from './core/rng.js?v=4';
-import { renderBoard, attachInput, esc } from './core/board.js?v=4';
-import { LETTERS, clone2 } from './core/util.js?v=4';
-import { mountLesson } from './tutorial.js?v=4';
-import { buildLesson } from './lessons/index.js?v=4';
+import { GAMES, byId } from './games/index.js?v=5';
+import { makeRng, newSeed } from './core/rng.js?v=5';
+import { renderBoard, attachInput, esc } from './core/board.js?v=5';
+import { LETTERS, clone2 } from './core/util.js?v=5';
+import { mountLesson } from './tutorial.js?v=5';
+import { buildLesson } from './lessons/index.js?v=5';
+import { createProfile, levelOf, dailyPick, dayKey, fmtMs } from './profile.js?v=5';
+import { play, confetti, toast, shake, celebrate, soundOn, setSound } from './fun.js?v=5';
+import { renderHistory, compareHtml } from './history.js?v=5';
 
 const $app = document.getElementById('app');
 
@@ -19,6 +22,58 @@ function markSolved(id) {
   p.solved[id] = (p.solved[id] || 0) + 1;
   store.set('zo-progress', p);
 }
+
+// ---------- profil, puan, ses ----------
+const prof = createProfile(store, { gameCount: GAMES.length });
+const daily = () => dailyPick(GAMES.map((g) => g.id), dayKey());
+function hud() {
+  const p = prof.get(), lv = levelOf(p.xp);
+  return `<div class="hud">
+    <a class="hud-lv" href="#/gecmis" title="Gelişimim">${lv.icon} <b>${p.name ? esc(p.name) : 'Ben'}</b> · ${lv.name}
+      <span class="xpbar" title="${lv.next ? 'Sonraki seviyeye ' + lv.toNext + ' puan' : 'En üst seviye!'}"><i style="width:${lv.pct}%"></i></span><b class="xp">${p.xp}</b>⭐</a>
+    ${p.streak && p.streak.count ? `<span class="streak" title="Üst üste çalıştığın gün">🔥 ${p.streak.count}</span>` : ''}
+    ${p.combo >= 2 ? `<span class="combo" title="Art arda ilk denemede doğru">⚡ ${p.combo}</span>` : ''}
+    <button class="sndbtn" aria-label="Sesi aç/kapa">${soundOn() ? '🔊' : '🔇'}</button>
+  </div>`;
+}
+function refreshHud() { document.querySelectorAll('.hud').forEach((h) => { h.outerHTML = hud(); }); }
+document.addEventListener('click', (ev) => {
+  const b = ev.target.closest('.sndbtn');
+  if (!b) return;
+  setSound(!soundOn());
+  b.textContent = soundOn() ? '🔊' : '🔇';
+  play('tap');
+});
+function askName(force = false) {
+  if (!force && prof.get().name) return;
+  if (document.querySelector('.modal')) return;
+  const cur = prof.get().name || '';
+  const ov = document.createElement('div');
+  ov.className = 'modal';
+  ov.innerHTML = `<form class="mbox pop-in">
+    <div class="mbig">👋</div>
+    <h2>${cur ? 'Adını değiştir' : 'Merhaba! Adın ne?'}</h2>
+    <p class="muted">Adın sonuçlarında ve gelişim sayfanda görünecek. Sadece bu cihazda saklanır.</p>
+    <input name="n" maxlength="24" autocomplete="given-name" placeholder="Adını yaz" value="${esc(cur)}" required>
+    <button class="btn big" type="submit">${cur ? 'Kaydet' : 'Başlayalım! 🚀'}</button>
+    ${cur ? '<button class="btn ghost" type="button" data-x>Vazgeç</button>' : ''}
+  </form>`;
+  document.body.appendChild(ov);
+  const inp = ov.querySelector('input');
+  setTimeout(() => inp.focus(), 50);
+  const x = ov.querySelector('[data-x]');
+  if (x) x.addEventListener('click', () => ov.remove());
+  ov.querySelector('form').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const n = inp.value.trim();
+    if (!n) return;
+    prof.setName(n);
+    ov.remove();
+    if (!cur) { confetti(60); play('badge'); toast(`<b>Hoş geldin ${esc(n)}!</b> Hadi ilk bulmacanı çöz 🧩`, 'level', 3500); }
+    route();
+  });
+}
+document.addEventListener('click', (ev) => { if (ev.target.closest('[data-rename]')) askName(true); });
 
 // ---------- bulmaca üretimi (önbellekli) ----------
 const cache = new Map();
@@ -80,7 +135,7 @@ const fsBtn = () => `<button class="fsbtn btn small ghost" aria-pressed="${docum
 
 // ---------- yönlendirme ----------
 window.addEventListener('hashchange', route);
-setTimeout(route, 0); // tüm sabitler tanımlandıktan sonra
+setTimeout(() => { route(); askName(); }, 0); // tüm sabitler tanımlandıktan sonra
 
 function route() {
   const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
@@ -91,6 +146,10 @@ function route() {
     return playScreen(parts[1], level, parts[3]);
   }
   if (parts[0] === 'ders' && byId[parts[1]]) return lessonScreen(parts[1]);
+  if (parts[0] === 'gecmis' || parts[0] === 'profil') {
+    $app.innerHTML = `<div class="bar"><a class="back" href="#/">← Ana sayfa</a><button class="btn small ghost" data-rename>✏️ Adımı değiştir</button></div><div class="hroot"></div>`;
+    return renderHistory($app.querySelector('.hroot'), prof, { GAMES, byId, esc });
+  }
   if (parts[0] === 'prova' && (parts[1] === 'okul' || parts[1] === 'final')) return examScreen(parts[1], parts[2]);
   return homeScreen();
 }
@@ -113,10 +172,15 @@ function homeScreen() {
   const best = (k) => pr.best[k] ? `En iyi: ${pr.best[k].correct}/${pr.best[k].total}` : 'Henüz denenmedi';
   $app.innerHTML = `
     <header class="hero">
-      <h1>Zeka Oyunları Alıştırma</h1>
-      <p class="sub">3. ve 4. sınıflar için · her soru yepyeni, sorular hiç bitmez!</p>
+      ${hud()}
+      <h1>${prof.get().name ? 'Merhaba ' + esc(prof.get().name) + '! 👋' : 'Zeka Oyunları Alıştırma'}</h1>
+      <p class="sub">3. ve 4. sınıflar için zeka oyunları · her soru yepyeni, sorular hiç bitmez!</p>
       <div class="dates">${DATES.map(([t, d]) => { const k = daysTo(d); return `<div class="date"><b>${k > 0 ? k + ' gün' : 'Geçti'}</b><span>${t}</span><small>${d.split('-').reverse().join('.')}</small></div>`; }).join('')}</div>
     </header>
+    <section class="today">
+      ${(() => { const d = daily(), g = byId[d.id], done = prof.get().daily[dayKey()]; return `<a class="dcard ${done ? 'done' : ''}" href="#/oyun/${d.id}/kolay/${d.seed}"><span class="dicon">${done ? '✅' : '☀️'}</span><span><b>Günün bulmacası: ${g.icon} ${g.name}</b><small>${done ? 'Bugünkü bulmacayı çözdün, yarın yenisi gelecek!' : 'Çöz, +20 ekstra puan kazan!'}</small></span></a>`; })()}
+      <a class="dcard" href="#/gecmis"><span class="dicon">📈</span><span><b>Gelişimim</b><small>Prova sonuçların, sürelerin, rozetlerin</small></span></a>
+    </section>
     <section>
       <h2>📚 Önce Öğren</h2>
       <p class="muted">Her oyunun kurallarını küçük bir örnek üzerinde, adım adım animasyonla izle. İstersen sesli anlatımı aç.</p>
@@ -242,6 +306,7 @@ function mountPuzzle(root, g, p, opts = {}) {
   }
   root.querySelectorAll('.btn').forEach((b) => b.addEventListener('click', () => {
     const a = b.dataset.a;
+    if (opts.onAction) opts.onAction(a);
     if (a === 'check') {
       const res = g.check(p, state.user);
       if (res.done) { msg.textContent = '🎉 Harika! Bulmacayı doğru çözdün. Şimdi soruyu cevapla.'; msg.className = 'msg ok'; }
@@ -294,30 +359,56 @@ function playScreen(id, level, seed) {
     location.replace(`#/oyun/${id}/${level}/${newSeed()}`);
     return;
   }
+  const dd = daily();
+  const isDaily = seed === dd.seed && id === dd.id && level === 'kolay';
   const lv = (l) => `<a class="lv ${l === level ? 'on' : ''}" href="#/oyun/${id}/${l}/${newSeed()}">${l === 'kolay' ? 'Kolay' : 'Orta'} <small>${g.levels[l]}</small></a>`;
   $app.innerHTML = `
     <div class="bar"><a class="back" href="#/">← Ana sayfa</a><span class="code" title="Bu kodu not alırsan aynı soruyu tekrar açabilirsin">Soru kodu: <b>${esc(seed)}</b></span>${fsBtn()}</div>
-    <h1 class="gtitle">${g.icon} ${g.name}</h1>
+    ${hud()}
+    <h1 class="gtitle">${g.icon} ${g.name} <span class="watch" title="Bu soruda geçen süre">⏱ <b id="sw">0:00</b></span>${isDaily ? ' <span class="tag">☀️ Günün bulmacası</span>' : ''}</h1>
     <div class="levels">${lv('kolay')}${lv('orta')}</div>
     <details class="rules" ${progress().solved[id] ? '' : 'open'}><summary>Nasıl oynanır?</summary><p>${esc(g.rules)}</p><a class="btn learn ${watched()[id] ? 'ghost' : 'glow'}" href="#/ders/${id}">▶ Animasyonla öğren</a></details>
     <div class="puz"></div>
     <div class="next"><a class="btn big" href="#/oyun/${id}/${level}/${newSeed()}">Yeni soru ➜</a></div>`;
-  let counted = false;
+  let counted = false, wrongs = 0, hints = 0, sawSol = false;
+  const t0 = Date.now();
+  const sw = () => { const el = document.getElementById('sw'); if (!el || counted) return false; const s = Math.floor((Date.now() - t0) / 1000); el.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; return true; };
+  const swId = setInterval(() => { if (!sw()) clearInterval(swId); }, 1000);
+  const PRAISE = ['Aferin! 🌟', 'Süpersin! 🚀', 'Harika! 🎉', 'Müthiş! 💪', 'Tam isabet! 🎯', 'Beyin fırtınası! 🧠'];
   mountPuzzle($app.querySelector('.puz'), g, p, {
     reveal: false,
+    onAction(a) { if (a === 'hint') hints++; if (a === 'sol') sawSol = true; },
     onAnswer(i) {
       const ok = p.q.options[i] === p.q.answer;
       const m = $app.querySelector('.msg');
       if (ok) {
-        m.textContent = '✅ Doğru cevap! Aferin!'; m.className = 'msg ok';
-        if (!counted) { counted = true; markSolved(id); }
         this.reveal = true;
-      } else { m.textContent = '❌ Bu değil, tekrar dene. Bulmacayı çözmek yardımcı olur.'; m.className = 'msg warn'; }
+        if (counted) return;
+        counted = true;
+        const ms = Date.now() - t0;
+        markSolved(id);
+        const res = prof.recordPractice({ id, level, ms, ok1: wrongs === 0, hints, sol: sawSol, daily: isDaily });
+        const combo = res.profile.combo;
+        m.innerHTML = `✅ ${PRAISE[Math.floor(Math.random() * PRAISE.length)]} <span class="muted">${fmtMs(ms)}</span>${combo >= 2 ? ` <span class="combo big">⚡ ${combo}'lü kombo!</span>` : ''}`;
+        m.className = 'msg ok';
+        play(combo >= 3 ? 'combo' : 'right');
+        confetti(combo >= 5 ? 120 : 60);
+        celebrate(res);
+        if (isDaily) toast('<b>☀️ Günün bulmacası tamam!</b> +20 ekstra puan', 'level', 3500);
+        refreshHud();
+      } else {
+        wrongs++;
+        m.textContent = '❌ Bu değil, tekrar dene. Bulmacayı çözmek yardımcı olur.'; m.className = 'msg warn';
+        play('wrong');
+        shake($app.querySelector('.qcard'));
+        if (!counted && wrongs === 1) { prof.practiceWrong(); refreshHud(); }
+      }
     },
   });
 }
 
 // ---------- yarışma provası ----------
+const KINDTXT = { okul: 'Okul İçi', final: 'Final' };
 const EXAM = {
   okul: { title: 'Okul İçi Seçmeleri Provası', minutes: 60 },
   final: { title: 'Final Provası', minutes: 90 },
@@ -430,23 +521,31 @@ function examResults(kind, ex) {
     else if (a == null) empty++; else if (ok) correct++; else wrong++;
     rows.push({ it, i, p, a, ok });
   });
+  if (!ex.endedAt) ex.endedAt = Math.min(Date.now(), ex.startedAt + E.minutes * 60000);
+  const used = Math.min(E.minutes * 60000, ex.endedAt - ex.startedAt);
+  let fresh = null;
   if (!ex.scored) {
     ex.scored = true;
-    store.set(examKey(kind), ex);
     const pr = progress();
-    const prev = pr.best[kind];
-    if (!prev || correct > prev.correct) pr.best[kind] = { correct, total: main, at: Date.now() };
+    const prevBest = pr.best[kind];
+    if (!prevBest || correct > prevBest.correct) pr.best[kind] = { correct, total: main, at: Date.now() };
     store.set('zo-progress', pr);
+    fresh = prof.recordExam({ kind, level: ex.level, ms: used, correct, wrong, empty, spareOk, total: main, items: rows.map(({ it, a, ok }) => ({ id: it.id, ok, ans: a != null, spare: !!it.spare })) });
+    ex.cmp = { me: { t: Date.now(), correct, wrong, empty, ms: used, total: main }, prev: fresh.prev, best: fresh.best };
   }
-  const used = Math.min(E.minutes * 60000, (ex.endedAt || Date.now()) - ex.startedAt);
+  store.set(examKey(kind), ex);
+  const nm = prof.get().name;
   $app.innerHTML = `
     <div class="bar"><a class="back" href="#/">← Ana sayfa</a></div>
-    <h1 class="gtitle">📋 ${E.title} Sonucu</h1>
+    <h1 class="gtitle">📋 ${nm ? esc(nm) + ' — ' : ''}${E.title} Sonucu</h1>
     <div class="score">
+      <div class="sname">${correct / main >= 0.8 ? '🏆 Muhteşem!' : correct / main >= 0.5 ? '👏 Çok iyi gidiyorsun!' : '💪 Çalıştıkça daha iyi olacak!'}</div>
       <div class="big">${correct}<small>/${main}</small></div>
       <div>✅ Doğru: <b>${correct}</b> · ❌ Yanlış: <b>${wrong}</b> · ⬜ Boş: <b>${empty}</b>${kind === 'final' ? ` · Yedek doğru: <b>${spareOk}</b>/3` : ''}</div>
       <div class="muted">Geçen süre: ${Math.floor(used / 60000)} dk ${Math.floor((used % 60000) / 1000)} sn · Seviye: ${ex.level === 'orta' ? 'Orta' : 'Kolay'}</div>
-      <a class="btn big" href="#/prova/${kind}">Yeni prova başlat</a>
+      ${ex.cmp && ex.cmp.prev ? compareHtml(ex.cmp.me, ex.cmp.prev, 'Bir önceki provana göre:') : ex.cmp ? `<p class="muted">Bu ilk ${KINDTXT[kind]} provan. Bir sonrakinde karşılaştırma göreceksin!</p>` : ''}
+      ${ex.cmp && ex.cmp.best && (!ex.cmp.prev || ex.cmp.best.t !== ex.cmp.prev.t) ? compareHtml(ex.cmp.me, ex.cmp.best, 'En iyi provana göre:') : ''}
+      <div class="levels"><a class="btn big" href="#/prova/${kind}">Yeni prova başlat</a><a class="btn big ghost" href="#/gecmis">📈 Gelişimim</a></div>
     </div>
     <div class="results">${rows.map(({ it, i, p, a, ok }) => `
       <div class="rrow ${a == null ? 'empty' : ok ? 'ok' : 'bad'}">
@@ -455,6 +554,11 @@ function examResults(kind, ex) {
         <button class="btn small ghost" data-i="${i}">Çözümü gör</button></div>
         <div class="rbody" id="rb${i}"></div>
       </div>`).join('')}</div>`;
+  if (fresh) {
+    if (correct / main >= 0.5) confetti(correct / main >= 0.8 ? 160 : 80);
+    play(correct / main >= 0.5 ? 'level' : 'right');
+    celebrate(fresh);
+  }
   $app.querySelectorAll('[data-i]').forEach((b) => b.addEventListener('click', () => {
     const i = +b.dataset.i, el = document.getElementById('rb' + i);
     if (el.innerHTML) { el.innerHTML = ''; return; }
@@ -480,7 +584,7 @@ function lessonScreen(id) {
     const { p, steps } = buildLesson(g);
     const ui = mountLesson($app.querySelector('.lroot'), g, p, steps, {
       tryHref: `#/oyun/${id}/kolay/${newSeed()}`,
-      onFinish() { const w = watched(); if (!w[id]) { w[id] = true; store.set('zo-lessons', w); } },
+      onFinish() { const w = watched(); if (!w[id]) { w[id] = true; store.set('zo-lessons', w); celebrate(prof.lessonDone()); confetti(50); } },
     });
     setTimeout(() => ui.play(), 600);
   }, 20);

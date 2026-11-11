@@ -1,7 +1,7 @@
-import { valueGame } from './base.js?v=4';
-import { randomFill, reduceGivens, to2 } from './latin.js?v=4';
-import { C } from '../core/csp.js?v=4';
-import { numberOptions, range } from '../core/util.js?v=4';
+import { valueGame } from './base.js?v=5';
+import { randomFill, reduceGivens, to2 } from './latin.js?v=5';
+import { C } from '../core/csp.js?v=5';
+import { numberOptions, range } from '../core/util.js?v=5';
 
 export default valueGame({
   id: 'komsular',

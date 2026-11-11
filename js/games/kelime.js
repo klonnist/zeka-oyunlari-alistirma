@@ -1,4 +1,4 @@
-import { valueGame } from './base.js?v=4';
+import { valueGame } from './base.js?v=5';
 
 const WORDS = (
   'ARI AYI KUŞ BALIK KEDİ KÖPEK ASLAN KAPLAN ZEBRA ZÜRAFA PANDA MANDA MARTI KARGA SERÇE TAVUK HOROZ ÖRDEK KUZU KEÇİ ' +

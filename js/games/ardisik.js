@@ -1,7 +1,7 @@
-import { valueGame } from './base.js?v=4';
-import { boxRegions, latinConstraints, randomFill, reduceGivens, to2 } from './latin.js?v=4';
-import { range } from '../core/util.js?v=4';
-import { diagSumQuestion } from './sudoku.js?v=4';
+import { valueGame } from './base.js?v=5';
+import { boxRegions, latinConstraints, randomFill, reduceGivens, to2 } from './latin.js?v=5';
+import { range } from '../core/util.js?v=5';
+import { diagSumQuestion } from './sudoku.js?v=5';
 
 export default valueGame({
   id: 'ardisik',

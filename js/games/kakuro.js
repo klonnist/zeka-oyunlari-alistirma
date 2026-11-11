@@ -1,6 +1,6 @@
-import { valueGame } from './base.js?v=4';
-import { solve, isUnique, reduceClues } from '../core/csp.js?v=4';
-import { range, numberOptions } from '../core/util.js?v=4';
+import { valueGame } from './base.js?v=5';
+import { solve, isUnique, reduceClues } from '../core/csp.js?v=5';
+import { range, numberOptions } from '../core/util.js?v=5';
 
 function makeMask(rng, R, Cc, maxRun) {
   for (let t = 0; t < 500; t++) {

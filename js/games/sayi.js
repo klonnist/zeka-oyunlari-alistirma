@@ -1,5 +1,5 @@
-import { valueGame } from './base.js?v=4';
-import { range, numberOptions } from '../core/util.js?v=4';
+import { valueGame } from './base.js?v=5';
+import { range, numberOptions } from '../core/util.js?v=5';
 
 function allNumbers(L) {
   const out = [];

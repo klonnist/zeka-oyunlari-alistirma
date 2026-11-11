@@ -1,6 +1,6 @@
-import { choiceGame } from './base.js?v=4';
-import { randomPoly, canonical, transform, isConnected, polySvg, figGrid, PALETTE, keyOf } from './visual.js?v=4';
-import { N4 } from '../core/util.js?v=4';
+import { choiceGame } from './base.js?v=5';
+import { randomPoly, canonical, transform, isConnected, polySvg, figGrid, PALETTE, keyOf } from './visual.js?v=5';
+import { N4 } from '../core/util.js?v=5';
 
 const MARKS = ['circle', 'tri', 'dot', 'star'];
 
