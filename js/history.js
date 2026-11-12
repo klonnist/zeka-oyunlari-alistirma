@@ -1,5 +1,5 @@
 // "Gelişimim" sayfası: prova geçmişi, grafik, karşılaştırma, tür bazında başarı
-import { compareExams, fmtMs, levelOf, BADGES } from './profile.js?v=5';
+import { compareExams, fmtMs, levelOf, BADGES } from './profile.js?v=6';
 
 const KIND = { okul: 'Okul İçi', final: 'Final' };
 const dt = (t) => new Date(t).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }) + ' ' + new Date(t).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });

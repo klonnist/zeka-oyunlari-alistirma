@@ -1,4 +1,4 @@
-import { valueGame } from './base.js?v=5';
+import { valueGame } from './base.js?v=6';
 
 const WORDS = (
   'ARI AYI KUŞ BALIK KEDİ KÖPEK ASLAN KAPLAN ZEBRA ZÜRAFA PANDA MANDA MARTI KARGA SERÇE TAVUK HOROZ ÖRDEK KUZU KEÇİ ' +
@@ -137,4 +137,26 @@ export default valueGame({
   },
   palette: (p) => p.letters,
   extra: (p) => ({ cell: (r, c) => (p.sol[r][c] == null ? { void: true } : {}) }),
+  // Harf yazınca kelime boyunca otomatik ilerleme (yatay 'h' / dikey 'v')
+  cursor: {
+    dirs(p, r, c) {
+      const on = (a, b) => a >= 0 && b >= 0 && a < p.rows && b < p.cols && p.sol[a][b] != null;
+      const out = [];
+      if (on(r, c - 1) || on(r, c + 1)) out.push('h');
+      if (on(r - 1, c) || on(r + 1, c)) out.push('v');
+      return out;
+    },
+    step(p, r, c, dir, delta) {
+      const a = dir === 'v' ? r + delta : r, b = dir === 'h' ? c + delta : c;
+      return a >= 0 && b >= 0 && a < p.rows && b < p.cols && p.sol[a][b] != null ? [a, b] : null;
+    },
+    word(p, r, c, dir) {
+      const cells = [[r, c]];
+      for (const d of [-1, 1]) {
+        let cur = [r, c];
+        while ((cur = this.step(p, cur[0], cur[1], dir, d))) cells.push(cur);
+      }
+      return cells;
+    },
+  },
 });

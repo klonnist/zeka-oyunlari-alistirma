@@ -1,6 +1,6 @@
-import { stateGame } from './base.js?v=5';
-import { isUnique, reduceClues } from '../core/csp.js?v=5';
-import { range, numberOptions, N4 } from '../core/util.js?v=5';
+import { stateGame } from './base.js?v=6';
+import { isUnique, reduceClues } from '../core/csp.js?v=6';
+import { range, numberOptions, N4 } from '../core/util.js?v=6';
 
 // saat yönünde 8 komşu
 const RING = [[-1, -1], [-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1]];

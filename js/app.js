@@ -1,12 +1,12 @@
-import { GAMES, byId } from './games/index.js?v=5';
-import { makeRng, newSeed } from './core/rng.js?v=5';
-import { renderBoard, attachInput, esc } from './core/board.js?v=5';
-import { LETTERS, clone2 } from './core/util.js?v=5';
-import { mountLesson } from './tutorial.js?v=5';
-import { buildLesson } from './lessons/index.js?v=5';
-import { createProfile, levelOf, dailyPick, dayKey, fmtMs } from './profile.js?v=5';
-import { play, confetti, toast, shake, celebrate, soundOn, setSound } from './fun.js?v=5';
-import { renderHistory, compareHtml } from './history.js?v=5';
+import { GAMES, byId } from './games/index.js?v=6';
+import { makeRng, newSeed } from './core/rng.js?v=6';
+import { renderBoard, attachInput, esc } from './core/board.js?v=6';
+import { LETTERS, clone2 } from './core/util.js?v=6';
+import { mountLesson } from './tutorial.js?v=6';
+import { buildLesson } from './lessons/index.js?v=6';
+import { createProfile, levelOf, dailyPick, dayKey, fmtMs } from './profile.js?v=6';
+import { play, confetti, toast, shake, celebrate, soundOn, setSound } from './fun.js?v=6';
+import { renderHistory, compareHtml } from './history.js?v=6';
 
 const $app = document.getElementById('app');
 
@@ -213,6 +213,7 @@ function mountPuzzle(root, g, p, opts = {}) {
     ${g.info ? `<div class="info">${esc(g.info(p))}</div>` : ''}
     <div class="boardwrap"></div>
     ${input && input.kind === 'value' ? `<div class="palette">${input.palette.map((v) => `<button class="pk" data-v="${esc(v)}">${esc(v)}</button>`).join('')}<button class="pk del" data-v="">⌫</button></div>` : ''}
+    ${g.cursor && input ? '<div class="tip">Bir kutuya dokun, harfleri sırayla yaz: kendiliğinden sonraki kutuya geçer. Kesişen kutuya bir kez daha dokunursan yön (yatay/dikey) değişir.</div>' : ''}
     ${input && input.kind === 'state' ? `<div class="tip">İpucu: hücreye dokundukça ${g.syms.on === 'ship' ? 'gemi → su → boş' : g.syms.on === 'diamond' ? 'elmas → boş (×) → temizle' : 'karala → nokta → temizle'} sırasıyla değişir.</div>` : ''}
     ${input && input.kind === 'edge' ? `<div class="tip">${g.id === 'cit' ? 'İki nokta arasına dokun ya da parmağını noktadan noktaya sürükle.' : 'Bir harften başlayıp parmağını hücre hücre sürükle. Bir bağlantıya dokunursan silinir.'}</div>` : ''}
     ${input ? `<div class="actions">
@@ -229,8 +230,11 @@ function mountPuzzle(root, g, p, opts = {}) {
   const msg = root.querySelector('.msg');
   let svg = null;
 
+  // Otomatik ilerleyen imleç (ör. Yerleşmeyen Kelime): seçili kelimenin yönü state.dir
+  const cur = g.cursor || null;
+  const wordSet = () => (cur && state.sel && state.dir ? new Set(cur.word(p, state.sel[0], state.sel[1], state.dir).map((x) => x.join(','))) : null);
   function draw() {
-    const cfg = g.view(p, state.user, { sel: state.sel, errors: state.errors, showSol: state.showSol });
+    const cfg = g.view(p, state.user, { sel: state.sel, errors: state.errors, showSol: state.showSol, word: state.showSol ? null : wordSet() });
     if (cfg.html) { wrap.innerHTML = cfg.html; return; }
     const html = renderBoard(cfg);
     if (svg) {
@@ -251,6 +255,13 @@ function mountPuzzle(root, g, p, opts = {}) {
       attachInput(svg, cfg.rows, cfg.cols, null, {
         cell(r, c) {
           if (!g.editable(p, r, c)) return;
+          if (cur) {
+            const ds = cur.dirs(p, r, c);
+            const same = state.sel && state.sel[0] === r && state.sel[1] === c;
+            // kesişen kutuya ikinci kez dokununca yön değişir
+            if (same && ds.length > 1) state.dir = state.dir === 'h' ? 'v' : 'h';
+            else if (!ds.includes(state.dir)) state.dir = ds[0] || 'h';
+          }
           state.sel = [r, c];
           draw();
         },
@@ -281,9 +292,21 @@ function mountPuzzle(root, g, p, opts = {}) {
 
   function setValue(v) {
     if (!state.sel) { msg.textContent = 'Önce bir hücre seç.'; return; }
-    const [r, c] = state.sel;
+    let [r, c] = state.sel;
     state.user = clone2(state.user);
+    if (cur && !state.dir) state.dir = cur.dirs(p, r, c)[0] || 'h';
+    if (cur && !v && !state.user[r][c]) {
+      // boş kutuda silme: bir önceki kutuya dön ve onu sil
+      const prev = cur.step(p, r, c, state.dir, -1);
+      if (prev && g.editable(p, prev[0], prev[1])) { [r, c] = prev; state.sel = prev; }
+    }
     state.user[r][c] = v;
+    if (cur && v) {
+      // harf yazınca kelimenin bir sonraki kutusuna geç
+      let nx = cur.step(p, r, c, state.dir, 1);
+      while (nx && !g.editable(p, nx[0], nx[1])) nx = cur.step(p, nx[0], nx[1], state.dir, 1);
+      if (nx) state.sel = nx;
+    }
     changed();
   }
   root.querySelectorAll('.pk').forEach((b) => b.addEventListener('click', () => setValue(b.dataset.v)));

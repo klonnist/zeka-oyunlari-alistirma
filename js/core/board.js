@@ -1,5 +1,5 @@
 // SVG tahta çizici + dokunma/sürükleme girişi
-import { edgeKey } from './util.js?v=5';
+import { edgeKey } from './util.js?v=6';
 
 const S = 40; // hücre boyu (viewBox birimi)
 

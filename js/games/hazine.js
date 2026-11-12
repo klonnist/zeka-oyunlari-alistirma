@@ -1,6 +1,6 @@
-import { stateGame } from './base.js?v=5';
-import { isUnique, C, reduceClues } from '../core/csp.js?v=5';
-import { range, numberOptions, N8 } from '../core/util.js?v=5';
+import { stateGame } from './base.js?v=6';
+import { isUnique, C, reduceClues } from '../core/csp.js?v=6';
+import { range, numberOptions, N8 } from '../core/util.js?v=6';
 
 export default stateGame({
   id: 'hazine',

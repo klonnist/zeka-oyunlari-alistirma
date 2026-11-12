@@ -1,7 +1,7 @@
-import { valueGame } from './base.js?v=5';
-import { lineVars, randomFill, to2 } from './latin.js?v=5';
-import { isUnique, reduceClues } from '../core/csp.js?v=5';
-import { range, diagonalArrow, textOptions } from '../core/util.js?v=5';
+import { valueGame } from './base.js?v=6';
+import { lineVars, randomFill, to2 } from './latin.js?v=6';
+import { isUnique, reduceClues } from '../core/csp.js?v=6';
+import { range, diagonalArrow, textOptions } from '../core/util.js?v=6';
 
 const SYM = ['X', 'A', 'B', 'C'];
 

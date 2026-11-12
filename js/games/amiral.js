@@ -1,6 +1,6 @@
-import { stateGame } from './base.js?v=5';
-import { solve, C } from '../core/csp.js?v=5';
-import { grid, range, numberOptions, N4 } from '../core/util.js?v=5';
+import { stateGame } from './base.js?v=6';
+import { solve, C } from '../core/csp.js?v=6';
+import { grid, range, numberOptions, N4 } from '../core/util.js?v=6';
 
 const FLEETS = { kolay: { n: 5, ships: [3, 2, 1, 1] }, orta: { n: 6, ships: [3, 2, 2, 1, 1, 1] } };
 

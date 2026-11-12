@@ -1,5 +1,5 @@
-import { choiceGame } from './base.js?v=5';
-import { figGrid, PALETTE } from './visual.js?v=5';
+import { choiceGame } from './base.js?v=6';
+import { figGrid, PALETTE } from './visual.js?v=6';
 
 function shade(hex, f) {
   const n = parseInt(hex.slice(1), 16);

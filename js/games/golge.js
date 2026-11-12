@@ -1,6 +1,6 @@
-import { choiceGame } from './base.js?v=5';
-import { randomPoly, keyOf, transform, isConnected, polySvg, figGrid, PALETTE } from './visual.js?v=5';
-import { N4 } from '../core/util.js?v=5';
+import { choiceGame } from './base.js?v=6';
+import { randomPoly, keyOf, transform, isConnected, polySvg, figGrid, PALETTE } from './visual.js?v=6';
+import { N4 } from '../core/util.js?v=6';
 
 export default choiceGame({
   id: 'golge',

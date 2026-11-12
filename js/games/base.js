@@ -1,5 +1,5 @@
 // Oyun türleri için ortak kalıplar
-import { grid, clone2 } from '../core/util.js?v=5';
+import { grid, clone2 } from '../core/util.js?v=6';
 
 const HL = '#fff1d0'; // soru hücresi vurgusu
 
@@ -32,6 +32,7 @@ export function valueGame(spec) {
             if (v) { d.text = v; d.cls = st.showSol ? 'sol' : 'user'; }
           }
           if (hl.has(r + ',' + c) && !d.black) { d.fill = d.fill || HL; if (p.q.qmark) d.mark = '?'; }
+          if (st.word && st.word.has(r + ',' + c) && !d.fill) d.fill = '#e3edff'; // yazılan kelime
           if (st.errors && st.errors.has(r + ',' + c)) d.err = true;
           row.push(d);
         }

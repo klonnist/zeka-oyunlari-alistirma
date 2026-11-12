@@ -1,7 +1,7 @@
 // Ders kayıt defteri: her oyun için sabit örnekli, adım adım ders
-import { GRID_LESSONS, kit } from './grid.js?v=5';
-import { VISUAL_LESSONS } from './visual.js?v=5';
-import { makeRng } from '../core/rng.js?v=5';
+import { GRID_LESSONS, kit } from './grid.js?v=6';
+import { VISUAL_LESSONS } from './visual.js?v=6';
+import { makeRng } from '../core/rng.js?v=6';
 
 // Ders örneği: kolay seviyede sabit tohumlu bulmaca (her seferinde aynı)
 export const LESSON_SEED = 'DERS-1';
